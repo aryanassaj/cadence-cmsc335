@@ -11,7 +11,7 @@ Arya Nassaj (anassaj) — uploader to submit server
 [TBD — record and add before submission. Project will NOT be graded without this.]
 
 ## Deployed App Link
-[TBD — add Render URL after deployment]
+https://cadence-cmsc335.onrender.com
 
 ## Contact Email
 workanassaj@gmail.com
@@ -42,7 +42,7 @@ Keystroke dynamics research — published in *npj Digital Medicine* and the *Jou
 | At least one HTML form | ✅ | Register (6 fields), Login (2 fields) |
 | Standalone CSS + Google Font | ✅ | `public/css/styles.css` + `public/css/landing.css` — DM Serif Display, Inter, Space Mono |
 | External API | ✅ | OpenAlex API in `routes/analysis.js` |
-| Deployed online | ❌ | Pending — deploy to Render |
+| Deployed online | ✅ | https://cadence-cmsc335.onrender.com |
 | YouTube video | ❌ | Pending — record demo |
 | README with required fields | ✅ | This file |
 
