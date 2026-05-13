@@ -1,7 +1,6 @@
 node_modules/
 .env
 .DS_Store
-public/frames/
 ml/__pycache__/
 ml/*.pkl
 ml/tappy_data/
