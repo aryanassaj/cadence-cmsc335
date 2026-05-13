@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Cadence</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="/">Cadence</a>
+    <div class="nav-links">
+      <a href="/auth/login">Already have an account?</a>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width:520px;padding-top:3rem;">
+    <h2>Create your account</h2>
+    <p class="text-muted" style="margin-bottom:1.5rem;">We collect a few details to contextualize your typing data over time.</p>
+
+    <% if (error) { %>
+      <div class="error-msg"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+      <form method="POST" action="/auth/register">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="username" placeholder="cogniuser" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Min 6 characters" minlength="6" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" name="age" min="10" max="110" required>
+          </div>
+          <div class="form-group">
+            <label>Dominant Hand</label>
+            <select name="handedness" required>
+              <option value="">Select...</option>
+              <option value="right">Right</option>
+              <option value="left">Left</option>
+              <option value="ambidextrous">Ambidextrous</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Highest Education Level</label>
+          <select name="education" required>
+            <option value="">Select...</option>
+            <option value="high_school">High School</option>
+            <option value="some_college">Some College</option>
+            <option value="bachelors">Bachelor's Degree</option>
+            <option value="masters">Master's Degree</option>
+            <option value="doctorate">Doctorate</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">Create Account</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

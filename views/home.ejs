@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadence — Cognitive Health via Typing</title>
+  <link rel="stylesheet" href="/css/landing.css">
+</head>
+<body class="landing-body">
+
+<!-- ── NAV ── -->
+<nav class="l-nav" id="l-nav">
+  <a class="l-nav-brand" href="/">CADENCE</a>
+  <div class="l-nav-links">
+    <a href="#signal">How It Works</a>
+    <a href="#stats">Research</a>
+    <% if (user) { %>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/auth/logout" class="l-btn l-btn-ghost">Log Out</a>
+    <% } else { %>
+      <a href="/auth/login">Log In</a>
+      <a href="/auth/register" class="l-btn l-btn-primary">Get Started</a>
+    <% } %>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="l-hero">
+  <canvas id="neural-canvas"></canvas>
+  <div class="l-hero-content">
+    <p class="l-eyebrow" id="hero-eyebrow">Keystroke Dynamics · Cognitive Health</p>
+    <h1 class="l-headline">
+      <span class="l-line"><span class="l-line-inner">Your typing</span></span>
+      <span class="l-line"><span class="l-line-inner l-serif-italic">reveals</span></span>
+      <span class="l-line"><span class="l-line-inner">the mind.</span></span>
+    </h1>
+    <p class="l-hero-desc" id="hero-desc">
+      Cadence measures the invisible rhythms in your keystrokes — subtle patterns that neuroscience links to early cognitive change — and turns them into a longitudinal health timeline.
+    </p>
+    <div class="l-hero-actions" id="hero-actions">
+      <% if (user) { %>
+        <a href="/test" class="l-btn l-btn-primary l-btn-lg">Take Today's Test</a>
+        <a href="/dashboard" class="l-btn l-btn-ghost">View Dashboard ↓</a>
+      <% } else { %>
+        <a href="/auth/register" class="l-btn l-btn-primary l-btn-lg">Start Tracking Free</a>
+        <a href="#signal" class="l-btn l-btn-ghost">See the science ↓</a>
+      <% } %>
+    </div>
+  </div>
+  <div class="l-hero-scroll" id="hero-scroll">
+    <div class="l-scroll-bar"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ── SIGNAL ── -->
+<section class="l-signal" id="signal">
+  <div data-reveal>
+    <span class="l-section-label">The Science</span>
+    <h2 class="l-section-head">Rhythm carries a signal modern tests miss.</h2>
+    <p class="l-section-body">
+      Research published in <em>npj Digital Medicine</em> and the <em>Journal of Alzheimer's Disease</em> shows that inter-key intervals, hold durations, and pause patterns diverge years before clinical symptoms appear. Cadence extracts seven keystroke features per session and builds a longitudinal fingerprint of your cognitive trajectory.
+    </p>
+  </div>
+  <div class="l-waveform-wrap" data-reveal>
+    <canvas id="waveform-canvas"></canvas>
+  </div>
+</section>
+
+<!-- ── PIPELINE ── -->
+<div class="l-pipeline-trigger">
+  <div class="l-pipeline-sticky" id="pipeline-sticky">
+    <div class="l-pipeline-head" data-reveal>
+      <span class="l-section-label">Architecture</span>
+      <h2 class="l-section-head" style="margin:0;">From keypress to insight — five stages.</h2>
+    </div>
+    <div class="l-pipeline-track" id="pipeline-track">
+
+      <div class="l-pipe-node" data-pipe="0">
+        <span class="l-pipe-icon">01 — CAPTURE</span>
+        <h3 class="l-pipe-title">Keystroke Events</h3>
+        <p class="l-pipe-detail">keydown + keyup<br>1ms resolution<br>browser-native API<br>zero hardware needed</p>
+      </div>
+
+      <div class="l-pipe-connector" data-pipe-line="0"></div>
+
+      <div class="l-pipe-node" data-pipe="1">
+        <span class="l-pipe-icon">02 — EXTRACT</span>
+        <h3 class="l-pipe-title">Feature Engineering</h3>
+        <p class="l-pipe-detail">7 signals derived<br>IKI · Hold · Flight<br>WPM · Backspace<br>Pause · IKI variance</p>
+      </div>
+
+      <div class="l-pipe-connector" data-pipe-line="1"></div>
+
+      <div class="l-pipe-node" data-pipe="2">
+        <span class="l-pipe-icon">03 — NORMALISE</span>
+        <h3 class="l-pipe-title">Z-Score Scaling</h3>
+        <p class="l-pipe-detail">TAPPY corpus μ/σ<br>z = (x − μ) / σ<br>population-relative<br>robust to outliers</p>
+      </div>
+
+      <div class="l-pipe-connector" data-pipe-line="2"></div>
+
+      <div class="l-pipe-node" data-pipe="3">
+        <span class="l-pipe-icon">04 — INFER</span>
+        <h3 class="l-pipe-title">Risk Scoring</h3>
+        <p class="l-pipe-detail">weighted dot product<br>sigmoid activation<br>score ∈ [0, 1]<br>3-class thresholds</p>
+      </div>
+
+      <div class="l-pipe-connector" data-pipe-line="3"></div>
+
+      <div class="l-pipe-node" data-pipe="4">
+        <span class="l-pipe-icon">05 — TRACK</span>
+        <h3 class="l-pipe-title">Longitudinal Dashboard</h3>
+        <p class="l-pipe-detail">MongoDB sessions<br>Chart.js timeline<br>OpenAlex papers<br>trend detection</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── CHAPTERS ── -->
+<div class="l-chapters">
+
+  <!-- Ch 01: The Dataset -->
+  <div class="l-chapter">
+    <div class="l-ch-text" data-reveal>
+      <span class="l-ch-num">01 / 03 — THE DATASET</span>
+      <h2 class="l-ch-head">205 people.<br><span class="l-serif-italic">Real diagnosis. Real keystrokes.</span></h2>
+      <p class="l-ch-body">
+        The TAPPY dataset collected longitudinal keystroke recordings from participants with and without Parkinson's disease over 12 months. Each session captured raw keydown and keyup timestamps at millisecond precision — the same resolution Cadence uses on you.
+      </p>
+      <p class="l-ch-body" style="margin-bottom:20px;">
+        From those recordings, researchers extracted timing biomarkers that correlate with motor-cognitive coupling — the loop between your brain's executive planning centers and your fingers. Cadence learned its risk weights from this corpus.
+      </p>
+      <div class="l-ch-tags">
+        <span class="l-ch-tag">TAPPY corpus</span>
+        <span class="l-ch-tag">205 participants</span>
+        <span class="l-ch-tag">Parkinson's / Healthy</span>
+        <span class="l-ch-tag">Longitudinal · 12 months</span>
+      </div>
+    </div>
+    <div class="l-ch-visual">
+      <canvas id="ch-dataset-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Ch 02: The Features -->
+  <div class="l-chapter">
+    <div class="l-ch-visual">
+      <canvas id="ch-features-canvas"></canvas>
+    </div>
+    <div class="l-ch-text" data-reveal>
+      <span class="l-ch-num">02 / 03 — THE FEATURES</span>
+      <h2 class="l-ch-head">Seven signals your<br><span class="l-serif-italic">fingers reveal.</span></h2>
+      <p class="l-ch-body">
+        No two features measure the same thing. Mean inter-key interval captures raw speed; its standard deviation captures <em>consistency</em> — the metric that diverges earliest in cognitive decline. Hold time isolates how long each key is depressed; flight time measures the gap between releasing one key and pressing the next.
+      </p>
+      <p class="l-ch-body" style="margin-bottom:20px;">
+        Backspace rate tracks correction tendency. Pause frequency counts hesitations longer than 500ms. Together they form a 7-dimensional fingerprint that changes in ways you cannot consciously control.
+      </p>
+      <div class="l-ch-tags">
+        <span class="l-ch-tag">Mean IKI</span>
+        <span class="l-ch-tag">IKI std dev</span>
+        <span class="l-ch-tag">Hold time</span>
+        <span class="l-ch-tag">Flight time</span>
+        <span class="l-ch-tag">WPM</span>
+        <span class="l-ch-tag">Backspace rate</span>
+        <span class="l-ch-tag">Pause freq</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ch 03: The Model -->
+  <div class="l-chapter">
+    <div class="l-ch-text" data-reveal>
+      <span class="l-ch-num">03 / 03 — THE MODEL</span>
+      <h2 class="l-ch-head">Sigmoid scoring,<br><span class="l-serif-italic">calibrated on evidence.</span></h2>
+      <p class="l-ch-body">
+        Cadence's inference engine computes a weighted sum of your z-scored features, then maps it through a sigmoid function to produce a risk score between 0 and 1. The weights were derived from the TAPPY feature importances; the thresholds (Low &lt; 0.33, Medium &lt; 0.55, High ≥ 0.55) were calibrated against clinical labels in the corpus.
+      </p>
+      <p class="l-ch-body" style="margin-bottom:20px;">
+        Because every computation runs in Node.js at submission time, there's no Python runtime dependency in production — the model is a 512-byte JSON file of weights and scalers, fast enough to score any session in under 1ms.
+      </p>
+      <div class="l-ch-tags">
+        <span class="l-ch-tag">Sigmoid activation</span>
+        <span class="l-ch-tag">model.json weights</span>
+        <span class="l-ch-tag">Low · Medium · High</span>
+        <span class="l-ch-tag">&lt; 1ms inference</span>
+      </div>
+    </div>
+    <div class="l-ch-visual">
+      <canvas id="ch-model-canvas"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── BRAIN ZOOM SECTION ── -->
+<div class="l-brainzoom-trigger" id="brain">
+  <div class="l-brainzoom-sticky">
+
+    <div class="l-brain-scene" id="brain-scene">
+      <canvas id="brain-zoom-canvas"></canvas>
+    </div>
+
+    <div class="l-bz-left-fade"></div>
+
+    <!-- Panel 0: Frontal Lobe -->
+    <div class="l-bz-panel" id="bz-0">
+      <span class="l-bz-lobe" style="color:#3b82f6;">Frontal Lobe — Planning & Motor Control</span>
+      <h3>Where your intent becomes a keypress.</h3>
+      <p>The prefrontal cortex plans each keystroke before your fingers move. Mean inter-key interval and pause frequency are governed here — the gap between your thoughts and your fingers. Cadence tracks these to detect when executive planning slows.</p>
+      <div class="l-bz-tags">
+        <span class="l-bz-tag">Mean IKI</span>
+        <span class="l-bz-tag">Pause Frequency</span>
+        <span class="l-bz-tag">Motor Planning</span>
+        <span class="l-bz-tag">Executive Function</span>
+      </div>
+    </div>
+
+    <!-- Panel 1: Parietal Lobe -->
+    <div class="l-bz-panel" id="bz-1">
+      <span class="l-bz-lobe" style="color:#8b5cf6;">Parietal Lobe — Sensorimotor Integration</span>
+      <h3>Feeling the key before it lands.</h3>
+      <p>The parietal lobe integrates tactile feedback from your fingertips with motor commands. Hold time — how long a key is depressed — and flight time between consecutive keys reflect this sensorimotor loop. It degrades silently in early Alzheimer's disease.</p>
+      <div class="l-bz-tags">
+        <span class="l-bz-tag">Hold Time</span>
+        <span class="l-bz-tag">Flight Time</span>
+        <span class="l-bz-tag">Sensorimotor Loop</span>
+        <span class="l-bz-tag">Tactile Feedback</span>
+      </div>
+    </div>
+
+    <!-- Panel 2: Temporal Lobe -->
+    <div class="l-bz-panel" id="bz-2">
+      <span class="l-bz-lobe" style="color:#06b6d4;">Temporal Lobe — Language & Working Memory</span>
+      <h3>The language circuits behind every word.</h3>
+      <p>Typing retrieves words from temporal-lobe language networks and holds them in hippocampal working memory while your fingers execute. Backspace rate and words-per-minute are sensitive to disruption here — you hesitate and self-correct more when memory is taxed.</p>
+      <div class="l-bz-tags">
+        <span class="l-bz-tag">Backspace Rate</span>
+        <span class="l-bz-tag">WPM</span>
+        <span class="l-bz-tag">Language Circuits</span>
+        <span class="l-bz-tag">Working Memory</span>
+      </div>
+    </div>
+
+    <!-- Panel 3: Cerebellum -->
+    <div class="l-bz-panel" id="bz-3">
+      <span class="l-bz-lobe" style="color:#10b981;">Cerebellum — Rhythmic Timing & Coordination</span>
+      <h3>The metronome inside your skull.</h3>
+      <p>The cerebellum controls the rhythmic regularity of repetitive motor acts — exactly like typing. IKI variance directly reflects cerebellar timing control: greater variability means less coordinated rhythm. This is one of the earliest detectable biomarkers in neurodegenerative disease.</p>
+      <div class="l-bz-tags">
+        <span class="l-bz-tag">IKI Variance</span>
+        <span class="l-bz-tag">Timing Regularity</span>
+        <span class="l-bz-tag">Cerebellar Rhythm</span>
+        <span class="l-bz-tag">Motor Coordination</span>
+      </div>
+    </div>
+
+    <div class="l-bz-region-label" id="bz-region-label">
+      <span class="l-bz-region-name" id="bz-region-name"></span>
+    </div>
+
+    <div class="l-bz-progress">
+      <div class="l-bz-dot active" data-bzdot="0"></div>
+      <div class="l-bz-dot" data-bzdot="1"></div>
+      <div class="l-bz-dot" data-bzdot="2"></div>
+      <div class="l-bz-dot" data-bzdot="3"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── STATS ── -->
+<section class="l-stats" id="stats">
+  <div class="l-stats-grid">
+    <div class="l-stat" data-reveal>
+      <div class="l-stat-num-wrap">
+        <span class="l-stat-num" data-count="205">0</span>
+        <span class="l-stat-sfx">+</span>
+      </div>
+      <p class="l-stat-label">Participants in the TAPPY dataset used to train Cadence's risk model</p>
+    </div>
+    <div class="l-stat" data-reveal>
+      <div class="l-stat-num-wrap">
+        <span class="l-stat-num" data-count="7">0</span>
+      </div>
+      <p class="l-stat-label">Keystroke features extracted per session — the same set used in peer-reviewed research</p>
+    </div>
+    <div class="l-stat" data-reveal>
+      <div class="l-stat-num-wrap">
+        <span class="l-stat-num" data-count="3">0</span>
+        <span class="l-stat-sfx">yr</span>
+      </div>
+      <p class="l-stat-label">Earlier than clinical diagnosis: how far ahead keystroke biomarkers can detect cognitive drift</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="l-cta">
+  <span class="l-section-label" data-reveal>Start today</span>
+  <h2 class="l-cta-head" data-reveal>
+    Three minutes.<br>
+    <span class="l-serif-italic">A lifetime of signal.</span>
+  </h2>
+  <div data-reveal>
+    <a href="/auth/register" class="l-btn l-btn-primary l-btn-lg">Create Free Account</a>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="l-footer">
+  <span>© 2025 Cadence</span>
+  <span>CMSC335 Final Exam Project · University of Maryland</span>
+</footer>
+
+<!-- ── SCRIPTS ── -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<script>
+/* ──────────────────────────────────────────────────────────────
+   LENIS SMOOTH SCROLL
+────────────────────────────────────────────────────────────── */
+const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
+function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+requestAnimationFrame(raf);
+gsap.registerPlugin(ScrollTrigger);
+lenis.on("scroll", ScrollTrigger.update);
+gsap.ticker.add((time) => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+/* ──────────────────────────────────────────────────────────────
+   NAV SCROLL EFFECT
+────────────────────────────────────────────────────────────── */
+const nav = document.getElementById("l-nav");
+ScrollTrigger.create({
+  start: "top -60px",
+  onEnter:     () => nav.classList.add("scrolled"),
+  onLeaveBack: () => nav.classList.remove("scrolled"),
+});
+
+/* ──────────────────────────────────────────────────────────────
+   NEURAL CANVAS — HERO BACKGROUND
+────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById("neural-canvas");
+  const ctx    = canvas.getContext("2d");
+  let W, H, particles;
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    build();
+  }
+
+  function build() {
+    const count = Math.floor((W * H) / 14000);
+    particles = Array.from({ length: count }, () => ({
+      x:  Math.random() * W,
+      y:  Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      r:  Math.random() * 1.6 + 0.6,
+      pulse: Math.random() * Math.PI * 2,
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const maxDist = 130;
+
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      p.pulse += 0.012;
+      const alpha = 0.22 + 0.14 * Math.sin(p.pulse);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(99,102,241,${alpha})`;
+      ctx.fill();
+    });
+
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < maxDist) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(99,102,241,${(1 - d / maxDist) * 0.11})`;
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  draw();
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   WAVEFORM CANVAS
+────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById("waveform-canvas");
+  const ctx    = canvas.getContext("2d");
+  const BARS   = 40;
+  let t = 0;
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  function draw() {
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    ctx.clearRect(0, 0, W, H);
+    const barW = (W / 2 - 20) / BARS * 0.62;
+    const gap  = (W / 2 - 20) / BARS * 0.38;
+    const mid  = H / 2;
+
+    for (let i = 0; i < BARS; i++) {
+      const xL = 10 + i * (barW + gap);
+      const xR = W / 2 + 10 + i * (barW + gap);
+      const hH = (Math.sin(t + i * 0.42) * 0.38 + 0.14) * mid * 0.9;
+      const hD = (Math.sin(t * 0.55 + i * 0.8 + Math.sin(i * 1.4) * 1.1) * 0.16 + 0.06) * mid * 0.9;
+
+      // healthy (left half)
+      ctx.fillStyle = "rgba(59,130,246,0.75)";
+      ctx.beginPath();
+      ctx.roundRect(xL, mid - hH, barW, hH, 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(59,130,246,0.2)";
+      ctx.beginPath();
+      ctx.roundRect(xL, mid, barW, hH * 0.45, 2);
+      ctx.fill();
+
+      // declining (right half)
+      ctx.fillStyle = "rgba(139,92,246,0.6)";
+      ctx.beginPath();
+      ctx.roundRect(xR, mid - hD, barW, hD, 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(139,92,246,0.18)";
+      ctx.beginPath();
+      ctx.roundRect(xR, mid, barW, hD * 0.45, 2);
+      ctx.fill();
+    }
+
+    // divider
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 12);
+    ctx.lineTo(W / 2, H - 12);
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "500 10px Inter, sans-serif";
+    ctx.fillStyle = "rgba(59,130,246,0.55)";
+    ctx.fillText("Healthy rhythm", 12, H - 10);
+    ctx.fillStyle = "rgba(139,92,246,0.55)";
+    ctx.fillText("Irregular pattern", W / 2 + 12, H - 10);
+
+    t += 0.018;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  draw();
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   BRAIN ZOOM — VIDEO FRAME SCRUBBER
+────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById("brain-zoom-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  const TOTAL  = 192;
+  const frames = new Array(TOTAL);
+  let loaded   = 0;
+  let curIdx   = 0;
+  let allReady = false;
+
+  const LOBES = [
+    { name: "Frontal Lobe",  color: "#3b82f6" },
+    { name: "Parietal Lobe", color: "#8b5cf6" },
+    { name: "Temporal Lobe", color: "#06b6d4" },
+    { name: "Cerebellum",    color: "#10b981" },
+  ];
+
+  /* ── Canvas resize — redraws current frame to fill ── */
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    paint(frames[curIdx]);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  /* ── Cover-fill draw ── */
+  function paint(img) {
+    if (!img || !img.complete || !img.naturalWidth) return;
+    const W = canvas.width, H = canvas.height;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const canAr = W / H, imgAr = iw / ih;
+    let sx, sy, sw, sh;
+    if (imgAr > canAr) { sh = ih; sw = sh * canAr; sx = (iw - sw) / 2; sy = 0; }
+    else               { sw = iw; sh = sw / canAr; sx = 0; sy = (ih - sh) / 2; }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+  }
+
+  /* ── Loading placeholder ── */
+  function drawPlaceholder() {
+    const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = "#020406";
+    ctx.fillRect(0, 0, W, H);
+    const pct = Math.round((loaded / TOTAL) * 100);
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillRect(W * 0.35, H * 0.5 - 1, W * 0.3 * (loaded / TOTAL), 2);
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.font      = `${11 * devicePixelRatio}px Inter, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(`${pct}%`, W * 0.5, H * 0.5 + 18 * devicePixelRatio);
+    ctx.textAlign = "left";
+  }
+
+  /* ── Preload all 192 frames ── */
+  drawPlaceholder();
+  for (let i = 0; i < TOTAL; i++) {
+    const img = new Image();
+    img.onload = () => {
+      loaded++;
+      if (!allReady) drawPlaceholder();
+      if (loaded === TOTAL) {
+        allReady = true;
+        paint(frames[0]);
+      }
+    };
+    img.src = `/frames/frame${String(i + 1).padStart(4, "0")}.jpg`;
+    frames[i] = img;
+  }
+
+  /* ── ScrollTrigger: scrub frames ── */
+  const panels      = [0,1,2,3].map(i => document.getElementById("bz-"+i));
+  const dots        = document.querySelectorAll(".l-bz-dot");
+  const regionLabel = document.getElementById("bz-region-label");
+  const regionName  = document.getElementById("bz-region-name");
+
+  /*
+   * Panel thresholds calibrated to the actual video content:
+   *   0–16%   : Frontal Lobe  (blue glow, front of brain)
+   *   16–50%  : Parietal Lobe (full purple brain)
+   *   50–68%  : Temporal Lobe (cyan lightning, side/base)
+   *   68–100% : Cerebellum    (teal → green, back base)
+   */
+  const BOUNDS = [0.16, 0.50, 0.68];
+  const H      = 0.025; // 2.5% dead-zone so Lenis inertia can't oscillate at a boundary
+  let lastReg  = -1;    // -1 = uninitialised; forces first activateRegion call to execute
+
+  function activateRegion(reg) {
+    if (reg === lastReg) return;
+    lastReg = reg;
+    panels.forEach((el, i) => el.classList.toggle("active", i === reg));
+    dots.forEach((d, i)    => d.classList.toggle("active",  i === reg));
+    regionName.textContent = LOBES[reg].name;
+    regionName.style.color = LOBES[reg].color;
+    regionLabel.classList.add("visible");
+  }
+
+  /* Determine region from raw progress — used on first entry and re-entry */
+  function regionAt(p) {
+    if (p < BOUNDS[0]) return 0;
+    if (p < BOUNDS[1]) return 1;
+    if (p < BOUNDS[2]) return 2;
+    return 3;
+  }
+
+  ScrollTrigger.create({
+    trigger: ".l-brainzoom-trigger",
+    start:   "top top",
+    end:     "bottom bottom",
+    /* Snap to correct region instantly on enter/leave — no hysteresis needed here */
+    onEnter(self)    { activateRegion(regionAt(self.progress)); },
+    onLeaveBack()    { lastReg = -1; activateRegion(0); },
+    onUpdate(self) {
+      /* Frame scrub */
+      if (allReady) {
+        const idx = Math.min(TOTAL - 1, Math.floor(self.progress * TOTAL));
+        if (idx !== curIdx) { curIdx = idx; paint(frames[curIdx]); }
+      }
+
+      /* Panel switching with hysteresis — one step at a time */
+      const p = self.progress;
+      let reg = lastReg < 0 ? regionAt(p) : lastReg;
+      if (reg < 3 && p >= BOUNDS[reg]     + H) reg++;
+      if (reg > 0 && p <  BOUNDS[reg - 1] - H) reg--;
+      activateRegion(reg);
+    },
+  });
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   HERO ENTRANCE
+────────────────────────────────────────────────────────────── */
+gsap.timeline({ defaults: { ease: "power3.out" } })
+  .to("#hero-eyebrow", { opacity: 1, duration: 0.9, delay: 0.3 })
+  .to(".l-line-inner", { y: "0%", duration: 1.1, stagger: 0.14 }, "-=0.5")
+  .to(["#hero-desc", "#hero-actions"], { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 }, "-=0.4")
+  .to("#hero-scroll", { opacity: 1, duration: 0.7 }, "-=0.3");
+
+/* ──────────────────────────────────────────────────────────────
+   SCROLL REVEAL
+────────────────────────────────────────────────────────────── */
+document.querySelectorAll("[data-reveal]").forEach(el => {
+  ScrollTrigger.create({
+    trigger: el,
+    start: "top 88%",
+    onEnter() { el.classList.add("visible"); },
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────
+   PIPELINE SCROLL ANIMATION
+────────────────────────────────────────────────────────────── */
+(function () {
+  const nodes     = document.querySelectorAll(".l-pipe-node");
+  const connectors= document.querySelectorAll(".l-pipe-connector");
+  const litClasses= ["lit","lit-cyan","lit-purple","lit-green","lit-blue2"];
+  let lastStep    = -1;
+
+  ScrollTrigger.create({
+    trigger: ".l-pipeline-trigger",
+    start: "top top",
+    end: "bottom bottom",
+    onUpdate(self) {
+      // 5 nodes, each occupies 20% of scroll range
+      const step = Math.min(nodes.length - 1, Math.floor(self.progress * nodes.length));
+      if (step === lastStep) return;
+      lastStep = step;
+      nodes.forEach((n, i) => {
+        n.classList.remove(...litClasses);
+        if (i <= step) n.classList.add(litClasses[i]);
+      });
+      connectors.forEach((c, i) => {
+        c.classList.toggle("lit", i < step);
+      });
+    },
+  });
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   CHAPTER CANVAS 01 — DATASET SCATTER (healthy vs declining)
+────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById("ch-dataset-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  let t = 0;
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  // Generate stable dot positions
+  function seeded(seed) {
+    let s = seed;
+    return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; };
+  }
+  const rand = seeded(42);
+
+  const dots = Array.from({ length: 205 }, (_, i) => {
+    const healthy = i < 120;
+    const cx = healthy ? 0.35 : 0.67;
+    const cy = healthy ? 0.42 : 0.56;
+    return {
+      x: cx + (rand() - 0.5) * 0.34,
+      y: cy + (rand() - 0.5) * 0.38,
+      healthy,
+      phase: rand() * Math.PI * 2,
+      r: rand() * 1.8 + 2,
+    };
+  });
+
+  function draw() {
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    ctx.clearRect(0, 0, W, H);
+
+    // axis labels
+    ctx.font = `500 10px Inter, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillText("IKI mean →", W * 0.06, H * 0.95);
+    ctx.save(); ctx.translate(W * 0.04, H * 0.5);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("IKI std dev →", 0, 0);
+    ctx.restore();
+
+    dots.forEach(d => {
+      d.phase += 0.008;
+      const jitter = Math.sin(d.phase) * 0.004;
+      const x = (d.x + jitter) * W;
+      const y = (d.y + jitter) * H;
+      const alpha = d.healthy ? 0.65 + 0.2 * Math.sin(d.phase * 0.7) : 0.55 + 0.18 * Math.sin(d.phase * 0.5);
+      ctx.beginPath();
+      ctx.arc(x, y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = d.healthy
+        ? `rgba(59,130,246,${alpha})`
+        : `rgba(139,92,246,${alpha})`;
+      ctx.fill();
+    });
+
+    // legend
+    ctx.beginPath(); ctx.arc(W * 0.12, H * 0.08, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(59,130,246,0.8)"; ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.font = "500 10px Inter, sans-serif";
+    ctx.fillText("Healthy (120)", W * 0.16, H * 0.08 + 4);
+
+    ctx.beginPath(); ctx.arc(W * 0.5, H * 0.08, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(139,92,246,0.8)"; ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.fillText("Parkinson's (85)", W * 0.54, H * 0.08 + 4);
+
+    t += 0.01;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  draw();
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   CHAPTER CANVAS 02 — FEATURE BAR CHART (animated live bars)
+────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById("ch-features-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  const features = [
+    { label: "Mean IKI",     color: "#3b82f6", base: 0.62, phase: 0.0 },
+    { label: "IKI Std Dev",  color: "#06b6d4", base: 0.81, phase: 0.8 },
+    { label: "Hold Time",    color: "#8b5cf6", base: 0.44, phase: 1.6 },
+    { label: "Flight Time",  color: "#10b981", base: 0.58, phase: 2.4 },
+    { label: "WPM",          color: "#3b82f6", base: 0.35, phase: 3.2 },
+    { label: "Backspace %",  color: "#f59e0b", base: 0.27, phase: 4.0 },
+    { label: "Pause Freq",   color: "#06b6d4", base: 0.70, phase: 4.8 },
+  ];
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  let t = 0;
+  function draw() {
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    ctx.clearRect(0, 0, W, H);
+
+    const padL = 92, padR = 20, padT = 24, padB = 16;
+    const chartW = W - padL - padR;
+    const barH   = (H - padT - padB) / features.length;
+    const barGap = barH * 0.28;
+    const barNet = barH - barGap;
+
+    features.forEach((f, i) => {
+      const val = f.base + Math.sin(t + f.phase) * 0.07;
+      const bw  = val * chartW;
+      const y   = padT + i * barH + barGap / 2;
+
+      // track
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.beginPath(); ctx.roundRect(padL, y, chartW, barNet, 3); ctx.fill();
+
+      // bar
+      const r = parseInt(f.color.slice(1,3),16), g = parseInt(f.color.slice(3,5),16), b2 = parseInt(f.color.slice(5,7),16);
+      const grad = ctx.createLinearGradient(padL, 0, padL + bw, 0);
+      grad.addColorStop(0, `rgba(${r},${g},${b2},0.85)`);
+      grad.addColorStop(1, `rgba(${r},${g},${b2},0.35)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.roundRect(padL, y, bw, barNet, 3); ctx.fill();
+
+      // label
+      ctx.font = "500 10.5px Inter, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.textAlign = "right";
+      ctx.fillText(f.label, padL - 8, y + barNet / 2 + 4);
+
+      // value
+      ctx.font = "600 10px Space Mono, monospace";
+      ctx.fillStyle = f.color;
+      ctx.textAlign = "left";
+      ctx.fillText((val * 100).toFixed(0), padL + bw + 6, y + barNet / 2 + 4);
+    });
+
+    ctx.textAlign = "left";
+    t += 0.014;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  draw();
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   CHAPTER CANVAS 03 — SIGMOID MODEL CURVE
+────────────────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById("ch-model-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  let t = 0;
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+
+  function draw() {
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    ctx.clearRect(0, 0, W, H);
+
+    const padL = 48, padR = 28, padT = 28, padB = 44;
+    const cW = W - padL - padR, cH = H - padT - padB;
+
+    // Grid lines
+    [0, 0.33, 0.55, 1].forEach(v => {
+      const y = padT + (1 - v) * cH;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y);
+      ctx.strokeStyle = v === 0 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.05)";
+      ctx.lineWidth = 0.8; ctx.setLineDash([4, 4]); ctx.stroke();
+      ctx.setLineDash([]);
+      if (v > 0 && v < 1) {
+        ctx.font = "500 9px Space Mono, monospace";
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.fillText(v.toFixed(2), 4, y + 4);
+      }
+    });
+
+    // Axis
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + cH); ctx.lineTo(padL + cW, padT + cH);
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1; ctx.setLineDash([]); ctx.stroke();
+
+    // Sigmoid curve (animated scan position)
+    const scanX = (Math.sin(t * 0.4) * 0.5 + 0.5) * cW;
+
+    ctx.beginPath();
+    for (let px = 0; px <= cW; px++) {
+      const z   = (px / cW) * 10 - 5;
+      const val = sigmoid(z);
+      const y   = padT + (1 - val) * cH;
+      px === 0 ? ctx.moveTo(padL + px, y) : ctx.lineTo(padL + px, y);
+    }
+    const grad = ctx.createLinearGradient(padL, 0, padL + cW, 0);
+    grad.addColorStop(0,   "rgba(59,130,246,0.9)");
+    grad.addColorStop(0.5, "rgba(99,102,241,0.9)");
+    grad.addColorStop(1,   "rgba(139,92,246,0.9)");
+    ctx.strokeStyle = grad; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // Area under curve
+    ctx.beginPath();
+    ctx.moveTo(padL, padT + cH);
+    for (let px = 0; px <= cW; px++) {
+      const z   = (px / cW) * 10 - 5;
+      const val = sigmoid(z);
+      ctx.lineTo(padL + px, padT + (1 - val) * cH);
+    }
+    ctx.lineTo(padL + cW, padT + cH); ctx.closePath();
+    const areaGrad = ctx.createLinearGradient(0, padT, 0, padT + cH);
+    areaGrad.addColorStop(0, "rgba(99,102,241,0.14)");
+    areaGrad.addColorStop(1, "rgba(99,102,241,0)");
+    ctx.fillStyle = areaGrad; ctx.fill();
+
+    // Threshold zones
+    const thresholds = [{ v: 0.33, label: "Low", color: "#10b981" }, { v: 0.55, label: "Med", color: "#f59e0b" }];
+    thresholds.forEach(({ v, label, color }) => {
+      const y = padT + (1 - v) * cH;
+      ctx.font = "600 9px Space Mono, monospace";
+      ctx.fillStyle = color;
+      ctx.fillText(label, padL + cW + 4, y + 4);
+    });
+
+    // Scan line (moving dot on curve)
+    const scanZ   = (scanX / cW) * 10 - 5;
+    const scanVal = sigmoid(scanZ);
+    const scanY   = padT + (1 - scanVal) * cH;
+    ctx.beginPath(); ctx.moveTo(padL + scanX, padT + cH); ctx.lineTo(padL + scanX, scanY);
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(padL + scanX, scanY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff"; ctx.fill();
+    ctx.font = "600 9px Space Mono, monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.fillText(`score: ${scanVal.toFixed(2)}`, padL + scanX + 8, scanY - 6);
+
+    // Axis labels
+    ctx.font = "500 9px Inter, sans-serif"; ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.textAlign = "center"; ctx.fillText("weighted feature score →", padL + cW / 2, padT + cH + 32);
+    ctx.textAlign = "left";
+
+    t += 0.016;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  draw();
+})();
+
+/* ──────────────────────────────────────────────────────────────
+   STATS COUNT-UP
+────────────────────────────────────────────────────────────── */
+document.querySelectorAll("[data-count]").forEach(el => {
+  const target = parseInt(el.dataset.count, 10);
+  ScrollTrigger.create({
+    trigger: el,
+    start: "top 85%",
+    once: true,
+    onEnter() {
+      gsap.to({ val: 0 }, {
+        val: target, duration: 2, ease: "power2.out",
+        onUpdate() { el.textContent = Math.round(this.targets()[0].val); },
+      });
+    },
+  });
+});
+</script>
+
+</body>
+</html>

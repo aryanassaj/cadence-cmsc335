@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Cadence</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Dashboard-specific styles ── */
+    .insight-banner {
+      border-radius: var(--radius);
+      padding: 1.1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      border-left: 3px solid var(--accent);
+      background: rgba(99,102,241,0.07);
+      color: var(--text);
+      display: none;
+    }
+    .insight-banner.rising  { border-color: var(--danger);  background: rgba(239,68,68,0.07); }
+    .insight-banner.falling { border-color: var(--success); background: rgba(34,197,94,0.07); }
+    .insight-banner.stable  { border-color: var(--accent);  background: rgba(99,102,241,0.07); }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .stat-card .sc-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .stat-card .sc-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-card .sc-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+    .trend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin-top: 6px;
+      width: fit-content;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .trend-rising  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+    .trend-falling { background: rgba(34,197,94,0.12);  color: var(--success); }
+    .trend-stable  { background: rgba(99,102,241,0.12); color: var(--accent); }
+
+    /* Feature breakdown table */
+    .feature-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .feature-table th {
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0 0.75rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .feature-table td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid rgba(30,41,59,0.5);
+      vertical-align: middle;
+    }
+    .feature-table tr:last-child td { border-bottom: none; }
+    .feat-name { color: var(--text); font-weight: 500; }
+    .feat-val  { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text-muted); }
+    .feat-delta {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: right;
+    }
+    .feat-delta.risk-up   { color: var(--danger); }
+    .feat-delta.risk-down { color: var(--success); }
+    .feat-delta.risk-flat { color: var(--text-muted); }
+    .feat-bar-wrap {
+      width: 80px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .feat-bar { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+    .section-header {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--text-muted);
+    }
+    .empty-state h3 { color: var(--text); margin-bottom: 0.5rem; }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .metric-item {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+    }
+    .metric-item .mi-label { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 2px; }
+    .metric-item .mi-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .dash-grid { grid-template-columns: 1fr !important; }
+      .stat-row  { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .stat-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="/">Cadence</a>
+    <div class="nav-links">
+      <a href="/test">Take Test</a>
+      <a href="/auth/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container-wide" style="padding-top:2rem;">
+
+    <!-- Header -->
+    <div class="flex" style="margin-bottom:1.25rem;">
+      <div>
+        <h2 style="margin-bottom:0.2rem;">Welcome back, <%= user.username %></h2>
+        <p class="text-muted">Your cognitive health timeline</p>
+      </div>
+      <div class="spacer"></div>
+      <a href="/test" class="btn btn-primary">+ New Session</a>
+    </div>
+
+    <!-- Insight banner -->
+    <div class="insight-banner" id="insight-banner"></div>
+
+    <!-- Stat cards -->
+    <div class="stat-row" id="stat-row" style="display:none;">
+      <div class="stat-card">
+        <span class="sc-label">Baseline Score</span>
+        <span class="sc-value" id="sc-baseline">—</span>
+        <span class="sc-sub" id="sc-baseline-sub"></span>
+      </div>
+      <div class="stat-card">
+        <span class="sc-label">Latest Score</span>
+        <span class="sc-value" id="sc-latest">—</span>
+        <div id="sc-trend-pill"></div>
+      </div>
+      <div class="stat-card">
+        <span class="sc-label">Sessions</span>
+        <span class="sc-value" id="sc-sessions">—</span>
+        <span class="sc-sub" id="sc-sessions-sub"></span>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="dash-grid" style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
+
+      <!-- Left column: charts -->
+      <div>
+        <div class="chart-container">
+          <p class="section-header">Risk Score Timeline</p>
+          <div id="no-data" class="empty-state" style="display:none;">
+            <h3>No sessions yet</h3>
+            <p style="margin-bottom:1rem;">Take your first typing test to start tracking.</p>
+            <a href="/test" class="btn btn-primary">Start First Session</a>
+          </div>
+          <canvas id="riskChart" height="90" style="display:none;"></canvas>
+        </div>
+
+        <div class="chart-container" id="wpm-chart-wrap" style="display:none;">
+          <p class="section-header">Words Per Minute</p>
+          <canvas id="wpmChart" height="55"></canvas>
+        </div>
+
+        <!-- Feature breakdown -->
+        <div class="chart-container" id="feature-wrap" style="display:none;">
+          <p class="section-header">Feature Breakdown — Current vs Baseline</p>
+          <table class="feature-table" id="feature-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Baseline</th>
+                <th>Current</th>
+                <th style="text-align:right;">Change</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="feature-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- Latest session card -->
+        <div class="card">
+          <p class="section-header">Latest Session</p>
+          <div id="latest-session">
+            <p class="text-muted">No sessions yet.</p>
+          </div>
+        </div>
+
+        <!-- Interpretation card -->
+        <div class="card" id="interp-card" style="display:none;">
+          <p class="section-header">Model Interpretation</p>
+          <p id="interp-text" style="font-size:0.875rem;color:var(--text);line-height:1.7;"></p>
+          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <p class="section-header" style="margin-bottom:0.5rem;">Primary driver</p>
+            <div id="driver-card" style="font-size:0.82rem;color:var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- Research -->
+        <div class="card">
+          <p class="section-header" style="color:var(--accent-2);">Related Research</p>
+          <p class="text-muted" style="font-size:0.78rem;margin-bottom:1rem;">
+            Latest papers on keystroke dynamics & cognitive decline
+          </p>
+          <div id="papers-list"><p class="text-muted">Loading...</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  async function loadDashboard() {
+    const res  = await fetch("/analysis/history");
+    const data = await res.json();
+    const { sessions, insight } = data;
+
+    /* ── Empty state ── */
+    if (!sessions || !sessions.length) {
+      document.getElementById("no-data").style.display = "block";
+      document.getElementById("latest-session").innerHTML =
+        `<p class="text-muted">No sessions yet.</p>
+         <a href="/test" class="btn btn-primary mt-2" style="display:inline-block;">Take First Test</a>`;
+      return;
+    }
+
+    /* ── Show elements ── */
+    document.getElementById("riskChart").style.display = "block";
+    document.getElementById("wpm-chart-wrap").style.display = "block";
+    document.getElementById("stat-row").style.display = "grid";
+
+    /* ── Stat cards ── */
+    document.getElementById("sc-baseline").textContent = insight.baselineScore;
+    document.getElementById("sc-baseline-sub").textContent =
+      `avg of first ${insight.baselineCount} session${insight.baselineCount > 1 ? "s" : ""}`;
+    document.getElementById("sc-latest").textContent = insight.latestScore;
+    document.getElementById("sc-sessions").textContent = insight.sessionCount;
+    document.getElementById("sc-sessions-sub").textContent =
+      insight.sessionCount > 1 ? `${insight.sessionCount - insight.baselineCount} after baseline` : "baseline in progress";
+
+    /* Trend pill */
+    const trendIcons = { rising: "↑", falling: "↓", stable: "→" };
+    document.getElementById("sc-trend-pill").innerHTML =
+      `<span class="trend-pill trend-${insight.trendLabel}">
+         ${trendIcons[insight.trendLabel]} ${insight.trendLabel}
+       </span>`;
+
+    /* ── Insight banner ── */
+    if (insight.sessionCount > 1) {
+      const banner = document.getElementById("insight-banner");
+      banner.textContent = insight.interpretation;
+      banner.className   = `insight-banner ${insight.trendLabel}`;
+      banner.style.display = "block";
+    }
+
+    /* ── Latest session card ── */
+    const last = sessions[sessions.length - 1];
+    const labelClass = `risk-${last.riskLabel}`;
+    document.getElementById("latest-session").innerHTML = `
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+        <span class="risk-badge ${labelClass}">${last.riskLabel} risk</span>
+        <span style="font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--text);">
+          ${Math.round(last.riskScore * 100)}
+        </span>
+        <span class="text-muted" style="font-size:0.75rem;line-height:1.3;">/ 100<br>${new Date(last.timestamp).toLocaleDateString()}</span>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-item">
+          <div class="mi-label">WPM</div>
+          <div class="mi-val">${Math.round(last.metrics.wpm)}</div>
+        </div>
+        <div class="metric-item">
+          <div class="mi-label">Hold Time</div>
+          <div class="mi-val">${Math.round(last.metrics.mean_hold)} ms</div>
+        </div>
+        <div class="metric-item">
+          <div class="mi-label">Mean IKI</div>
+          <div class="mi-val">${Math.round(last.metrics.mean_iki)} ms</div>
+        </div>
+        <div class="metric-item">
+          <div class="mi-label">Backspace Rate</div>
+          <div class="mi-val">${(last.metrics.backspace_rate * 100).toFixed(1)}%</div>
+        </div>
+        <div class="metric-item">
+          <div class="mi-label">Flight Time</div>
+          <div class="mi-val">${Math.round(last.metrics.mean_flight)} ms</div>
+        </div>
+        <div class="metric-item">
+          <div class="mi-label">Pause Freq</div>
+          <div class="mi-val">${(last.metrics.pause_freq * 100).toFixed(1)}%</div>
+        </div>
+      </div>
+    `;
+
+    /* ── Interpretation card ── */
+    if (insight.sessionCount > 1) {
+      document.getElementById("interp-card").style.display = "block";
+      document.getElementById("interp-text").textContent = insight.interpretation;
+
+      const driver = insight.featureBreakdown?.[0];
+      const topDriver = insight.featureBreakdown?.sort((a,b) => Math.abs(b.riskImpact) - Math.abs(a.riskImpact))[0];
+      if (topDriver && Math.abs(topDriver.pctDelta) >= 3) {
+        const riskDir = topDriver.riskImpact > 0 ? "↑ increasing risk" : "↓ decreasing risk";
+        const color   = topDriver.riskImpact > 0 ? "var(--danger)" : "var(--success)";
+        document.getElementById("driver-card").innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span>${topDriver.label}</span>
+            <span style="color:${color};font-weight:600;font-size:0.78rem;">${riskDir}</span>
+          </div>
+          <div style="display:flex;gap:1.5rem;margin-top:0.4rem;">
+            <span>Baseline: <strong style="color:var(--text);">${topDriver.baseline}</strong></span>
+            <span>Now: <strong style="color:var(--text);">${topDriver.current}</strong></span>
+            <span style="color:${color};font-weight:600;">${topDriver.pctDelta > 0 ? "+" : ""}${topDriver.pctDelta}%</span>
+          </div>
+        `;
+      } else {
+        document.getElementById("driver-card").innerHTML =
+          `<span style="color:var(--text-muted);">All features within 3% of baseline — patterns are stable.</span>`;
+      }
+    }
+
+    /* ── Feature breakdown table ── */
+    if (insight.sessionCount > 1 && insight.featureBreakdown) {
+      document.getElementById("feature-wrap").style.display = "block";
+      const tbody = document.getElementById("feature-body");
+      const rows  = [...insight.featureBreakdown].sort((a,b) => Math.abs(b.riskImpact) - Math.abs(a.riskImpact));
+
+      tbody.innerHTML = rows.map(f => {
+        const pct  = f.pctDelta;
+        const cls  = Math.abs(pct) < 3 ? "risk-flat" : (f.riskImpact > 0 ? "risk-up" : "risk-down");
+        const sign = pct > 0 ? "+" : "";
+        const barPct  = Math.min(100, Math.abs(pct) * 2);
+        const barColor = cls === "risk-up" ? "#ef4444" : cls === "risk-down" ? "#22c55e" : "#475569";
+        const barDir  = pct < 0 ? "margin-left:auto;" : "";
+        return `
+          <tr>
+            <td class="feat-name">${f.label}</td>
+            <td class="feat-val">${f.baseline}</td>
+            <td class="feat-val">${f.current}</td>
+            <td class="feat-delta ${cls}">${sign}${pct}%</td>
+            <td>
+              <div class="feat-bar-wrap">
+                <div class="feat-bar" style="width:${barPct}%;background:${barColor};${barDir}"></div>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+    }
+
+    /* ── Risk chart ── */
+    const labels = sessions.map(s => new Date(s.timestamp).toLocaleDateString());
+    const scores = sessions.map(s => Math.round(s.riskScore * 100));
+    const wpms   = sessions.map(s => Math.round(s.metrics.wpm));
+    const baselineArr = sessions.map(() => insight.baselineScore);
+
+    const baseOpts = {
+      tension: 0.35,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      fill: false,
+    };
+
+    new Chart(document.getElementById("riskChart"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            ...baseOpts,
+            label: "Risk Score",
+            data: scores,
+            borderColor: "rgba(99,102,241,1)",
+            backgroundColor: "rgba(99,102,241,0.1)",
+            pointBackgroundColor: "rgba(99,102,241,1)",
+            fill: true,
+            order: 1,
+          },
+          {
+            ...baseOpts,
+            label: "Your Baseline",
+            data: baselineArr,
+            borderColor: "rgba(148,163,184,0.45)",
+            borderDash: [5,4],
+            pointRadius: 0,
+            order: 2,
+          },
+        ],
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: "#94a3b8", font: { size: 11 }, boxWidth: 14 },
+          },
+        },
+        scales: {
+          y: {
+            min: 0, max: 100,
+            grid:  { color: "rgba(30,41,59,0.6)" },
+            ticks: { color: "#64748b", font: { size: 11 } },
+          },
+          x: {
+            grid:  { display: false },
+            ticks: { color: "#64748b", font: { size: 11 } },
+          },
+        },
+      },
+    });
+
+    new Chart(document.getElementById("wpmChart"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          ...baseOpts,
+          label: "WPM",
+          data: wpms,
+          borderColor: "rgba(34,211,238,1)",
+          backgroundColor: "rgba(34,211,238,0.08)",
+          pointBackgroundColor: "rgba(34,211,238,1)",
+          fill: true,
+        }],
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: "rgba(30,41,59,0.6)" }, ticks: { color: "#64748b", font: { size: 11 } } },
+          x: { grid: { display: false }, ticks: { color: "#64748b", font: { size: 11 } } },
+        },
+      },
+    });
+  }
+
+  async function loadResearch() {
+    const res     = await fetch("/analysis/research");
+    const papers  = await res.json();
+    const container = document.getElementById("papers-list");
+    if (!papers.length) { container.innerHTML = `<p class="text-muted">No results.</p>`; return; }
+    container.innerHTML = papers.map(p => `
+      <div class="paper-card">
+        <h4>${p.title}</h4>
+        <p>${p.authors.join(", ")} · ${p.year}</p>
+        ${p.doi ? `<a href="${p.doi}" target="_blank" rel="noopener">View Paper →</a>` : ""}
+      </div>
+    `).join("");
+  }
+
+  loadDashboard();
+  loadResearch();
+  </script>
+</body>
+</html>

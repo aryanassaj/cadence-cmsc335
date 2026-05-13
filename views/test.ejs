@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Test — Cadence</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="/">Cadence</a>
+    <div class="nav-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/auth/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-top:2rem;">
+    <h2>Today's Typing Test</h2>
+    <p class="text-muted" style="margin-bottom:1.5rem;">Type the passage below as naturally as possible. Don't rush — we're measuring rhythm, not speed.</p>
+
+    <div class="card">
+      <div class="passage-box" id="passage-display"></div>
+
+      <textarea id="typing-input" rows="4" placeholder="Click here and start typing..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+
+      <div class="test-stats mt-2">
+        <div class="stat-box">
+          <div class="stat-val" id="stat-wpm">0</div>
+          <div class="stat-label">WPM</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-accuracy">100%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-time">0s</div>
+          <div class="stat-label">Elapsed</div>
+        </div>
+      </div>
+
+      <button id="submit-btn" class="btn btn-primary" disabled>Complete Test to Submit</button>
+    </div>
+
+    <div id="result-card" class="card" style="display:none;">
+      <h3>Session Results</h3>
+      <div id="result-content"></div>
+      <div class="mt-2 flex">
+        <a href="/test" class="btn btn-secondary">Retake</a>
+        <a href="/dashboard" class="btn btn-primary">View Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PASSAGE = `<%= passage %>`;
+    const events  = [];
+    let started   = false;
+    let startTime = null;
+    let timerInterval = null;
+
+    const display  = document.getElementById("passage-display");
+    const input    = document.getElementById("typing-input");
+    const submitBtn= document.getElementById("submit-btn");
+    const resultCard = document.getElementById("result-card");
+    const resultContent = document.getElementById("result-content");
+
+    function renderPassage(typed) {
+      display.innerHTML = PASSAGE.split("").map((char, i) => {
+        if (i < typed.length) {
+          return typed[i] === char
+            ? `<span class="typed">${char}</span>`
+            : `<span class="error">${char}</span>`;
+        }
+        if (i === typed.length) return `<span class="current">${char}</span>`;
+        return `<span>${char}</span>`;
+      }).join("");
+    }
+
+    renderPassage("");
+
+    input.addEventListener("keydown", e => {
+      events.push({ type: "keydown", key: e.key, time: Date.now() });
+      if (!started) {
+        started = true;
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+          document.getElementById("stat-time").textContent =
+            Math.floor((Date.now() - startTime) / 1000) + "s";
+        }, 500);
+      }
+    });
+
+    input.addEventListener("keyup", e => {
+      events.push({ type: "keyup", key: e.key, time: Date.now() });
+    });
+
+    input.addEventListener("input", () => {
+      const typed = input.value;
+      renderPassage(typed);
+
+      const correct = typed.split("").filter((c, i) => c === PASSAGE[i]).length;
+      const accuracy = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+      document.getElementById("stat-accuracy").textContent = accuracy + "%";
+
+      const elapsed = startTime ? (Date.now() - startTime) / 60000 : 1;
+      const wpm = Math.round((typed.replace(/\s/g,"").length / 5) / (elapsed || 1));
+      document.getElementById("stat-wpm").textContent = wpm;
+
+      const done = typed.length >= PASSAGE.length;
+      submitBtn.disabled = !done;
+      submitBtn.textContent = done ? "Submit Session" : "Complete Test to Submit";
+
+      if (done) clearInterval(timerInterval);
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Analyzing...";
+      try {
+        const res = await fetch("/test/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keystrokes: JSON.stringify(events) }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          const labelClass = `risk-${data.label}`;
+          resultContent.innerHTML = `
+            <div class="flex mt-1 mb-2">
+              <div>
+                <p class="text-muted">Risk Level</p>
+                <span class="risk-badge ${labelClass}">${data.label}</span>
+              </div>
+              <div style="margin-left:2rem;">
+                <p class="text-muted">Score</p>
+                <p style="font-family:'Space Mono',monospace;font-size:1.5rem;color:var(--accent)">${Math.round(data.score * 100)}</p>
+              </div>
+            </div>
+            <p class="text-muted" style="font-size:0.85rem;">WPM: ${Math.round(data.metrics.wpm)} &nbsp;|&nbsp; Mean IKI: ${Math.round(data.metrics.mean_iki)}ms &nbsp;|&nbsp; Backspace Rate: ${(data.metrics.backspace_rate * 100).toFixed(1)}%</p>
+          `;
+          resultCard.style.display = "block";
+        }
+      } catch (e) {
+        submitBtn.textContent = "Error — try again";
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
