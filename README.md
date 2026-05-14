@@ -1,7 +1,8 @@
 # Cadence — Cognitive Health Tracker via Typing Patterns
 
 **Submitted by:** Trenton Regis (tregis05) — uploader to submit server\
-**Group Members:** Arya Nassaj (anassaj), Trenton Regis (tregis05), Donald Gutierrez (donaldxg)\
+**Group Members:** Arya Nassaj (anassaj), Trenton Regis (tregis05), Donald Gutierrez (donaldxg) \
+**App Description:** Cadence is a full-stack web application that tracks subtle changes in typing behavior over time and uses machine learning to produce a longitudinal cognitive health timeline. \
 **YouTube Video Link** https://youtu.be/LjwDRXXC9RM \
 **APIs** OpenAlex API (https://openalex.org/) \
 **Contact Email** workanassaj@gmail.com\
