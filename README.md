@@ -1,26 +1,12 @@
 # Cadence — Cognitive Health Tracker via Typing Patterns
 
-## Submitted by
-Arya Nassaj (anassaj) — uploader to submit server
-
-## Group Members
-- Arya Nassaj (anassaj)
-- [Partner Name] ([directory ID]) — add before submission if applicable
-
-## YouTube Video Link
-[TBD — record and add before submission. Project will NOT be graded without this.]
-
-## Deployed App Link
-https://cadence-cmsc335.onrender.com
-
-## Contact Email
-workanassaj@gmail.com
-
-## APIs Used
-- **OpenAlex API** (https://openalex.org/) — fetches real Alzheimer's / cognitive-decline research papers for the dashboard. Free, no API key required. Called at `GET /analysis/research`.
-
-## AI Use
-1. Claude Code (Anthropic) — used throughout development for code generation, debugging, and design
+**Submitted by:** Trenton Regis (tregis05) — uploader to submit server
+**Group Members:** Arya Nassaj (anassaj), Trenton Regis (tregis05), Donald Gutierrez (donaldxg)
+**YouTube Video Link** [TBD — record and add before submission. Project will NOT be graded without this.]
+**APIs** OpenAlex API (https://openalex.org/)
+**Contact Email** workanassaj@gmail.com
+**Deployed App Link:** https://cadence-cmsc335.onrender.com
+**AI Use:** Claude Code (Anthropic)
 
 ---
 
@@ -205,7 +191,7 @@ zip -r cadence_submission.zip FinalExamProject/ --exclude "*/node_modules/*" --e
 ## What's Remaining Before Final Submission
 
 - [ ] Record and upload YouTube demo video — add link above
-- [ ] Deploy to Render — add deployed URL above
-- [ ] (Optional) Train real model on TAPPY dataset and update `model.json`
-- [ ] Add partner name/directory ID if applicable
-- [ ] Submit ZIP to class submit server when it opens
+- [x] Deploy to Render — add deployed URL above
+- [x] (Optional) Train real model on TAPPY dataset and update `model.json`
+- [x] Add partner name/directory ID if applicable
+- [x] Submit ZIP to class submit server when it opens
