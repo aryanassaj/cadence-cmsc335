@@ -1,12 +1,12 @@
 # Cadence — Cognitive Health Tracker via Typing Patterns
 
-**Submitted by:** Trenton Regis (tregis05) — uploader to submit server
-**Group Members:** Arya Nassaj (anassaj), Trenton Regis (tregis05), Donald Gutierrez (donaldxg)
-**YouTube Video Link** [TBD — record and add before submission. Project will NOT be graded without this.]
-**APIs** OpenAlex API (https://openalex.org/)
-**Contact Email** workanassaj@gmail.com
-**Deployed App Link:** https://cadence-cmsc335.onrender.com
-**AI Use:** Claude Code (Anthropic)
+**Submitted by:** Trenton Regis (tregis05) — uploader to submit server\
+**Group Members:** Arya Nassaj (anassaj), Trenton Regis (tregis05), Donald Gutierrez (donaldxg)\
+**YouTube Video Link** https://youtu.be/LjwDRXXC9RM \
+**APIs** OpenAlex API (https://openalex.org/) \
+**Contact Email** workanassaj@gmail.com\
+**Deployed App Link:** https://cadence-cmsc335.onrender.com \
+**AI Use:** Claude Code (Anthropic)\
 
 ---
 
@@ -29,7 +29,7 @@ Keystroke dynamics research — published in *npj Digital Medicine* and the *Jou
 | Standalone CSS + Google Font | ✅ | `public/css/styles.css` + `public/css/landing.css` — DM Serif Display, Inter, Space Mono |
 | External API | ✅ | OpenAlex API in `routes/analysis.js` |
 | Deployed online | ✅ | https://cadence-cmsc335.onrender.com |
-| YouTube video | ❌ | Pending — record demo |
+| YouTube video | https://youtu.be/LjwDRXXC9RM |
 | README with required fields | ✅ | This file |
 
 ---
