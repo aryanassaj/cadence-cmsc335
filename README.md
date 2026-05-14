@@ -7,7 +7,7 @@
 **APIs:** OpenAlex API (https://openalex.org/) \
 **Contact Email:** workanassaj@gmail.com\
 **Deployed App Link:** https://cadence-cmsc335.onrender.com \
-**AI Use:** Claude Code (Anthropic)\
+**AI Use:** Claude Code (Anthropic)
 
 ---
 
