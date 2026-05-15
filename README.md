@@ -30,7 +30,7 @@ Keystroke dynamics research — published in *npj Digital Medicine* and the *Jou
 | Standalone CSS + Google Font | ✅ | `public/css/styles.css` + `public/css/landing.css` — DM Serif Display, Inter, Space Mono |
 | External API | ✅ | OpenAlex API in `routes/analysis.js` |
 | Deployed online | ✅ | https://cadence-cmsc335.onrender.com |
-| YouTube video | https://youtu.be/LjwDRXXC9RM |
+| YouTube video | ✅ | https://youtu.be/LjwDRXXC9RM |
 | README with required fields | ✅ | This file |
 
 ---
@@ -40,7 +40,7 @@ Keystroke dynamics research — published in *npj Digital Medicine* and the *Jou
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/` | No | Landing page |
-| GET | `/dashboard` | Yes | User dashboard with charts and research |
+| GET | `/dashboard` | Yes | User dashboard with risk charts, baseline, trend, feature breakdown |
 | GET | `/auth/register` | No | Registration form |
 | POST | `/auth/register` | No | Create account, hash password, set session |
 | GET | `/auth/login` | No | Login form |
@@ -48,7 +48,7 @@ Keystroke dynamics research — published in *npj Digital Medicine* and the *Jou
 | GET | `/auth/logout` | No | Destroy session, redirect home |
 | GET | `/test` | Yes | Typing test page |
 | POST | `/test/submit` | Yes | Process keystroke events → extract features → score → save to DB |
-| GET | `/analysis/history` | Yes | Return all user sessions as JSON |
+| GET | `/analysis/history` | Yes | Return sessions + baseline/trend/feature interpretation as JSON |
 | GET | `/analysis/research` | Yes | Fetch Alzheimer's research papers from OpenAlex API |
 
 ---
@@ -76,15 +76,17 @@ FinalExamProject/
 │
 ├── ml/
 │   ├── inference.js        # extractFeatures() + scoreRisk() — pure Node.js, no Python at runtime
-│   ├── model.json          # Feature weights, z-score scalers, risk thresholds
-│   └── train.py            # TAPPY dataset training scaffold (offline, Python)
+│   ├── model.json          # TAPPY-trained LR weights, z-score scalers, risk thresholds
+│   ├── train_local.py      # Training script — reads TappyKeystrokes.zip, outputs model.json
+│   └── cadence_train.ipynb # Colab notebook version of training pipeline
 │
 ├── public/
 │   ├── css/
 │   │   ├── styles.css      # Dark theme for app pages (dashboard, test, auth)
 │   │   └── landing.css     # Apple-style landing page CSS (DM Serif Display, GSAP, Lenis)
-│   ├── images/             # (reserved for brain video frames when added)
-│   └── js/                 # (reserved for extracted JS modules)
+│   ├── frames/             # 192 JPEG frames from Brain.mp4 for scroll scrubber
+│   ├── images/
+│   └── js/
 │
 └── views/                  # EJS templates
     ├── home.ejs            # Landing page — neural canvas hero, pipeline, brain zoom, stats
@@ -117,19 +119,29 @@ From raw `keydown` / `keyup` events (timestamped at 1ms resolution):
 3. Apply sigmoid: `score = 1 / (1 + exp(-weighted_sum))`
 4. Classify: Low < 0.33 ≤ Medium < 0.55 ≤ High
 
-### Training the Real Model (optional offline step)
+### Model Training (`ml/train_local.py`)
+Trained on the **TAPPY Keystroke Dataset** — 207 subjects, 154 PD, 53 healthy. Reads directly from the downloaded ZIP.
+
 ```bash
-# Install Python dependencies
-pip install pandas numpy scikit-learn
-
-# Download TAPPY dataset from Kaggle
-# https://www.kaggle.com/datasets/valkling/tappy-keystroke-data
-
-# Place CSV files in ml/tappy_data/ then run:
-python ml/train.py
-# Outputs updated model.json with real TAPPY-trained weights
+python3 ml/train_local.py   # reads ~/Downloads/TappyKeystrokes.zip → outputs ml/model.json
 ```
-The app is fully functional with the placeholder weights in `model.json`. Scores are calibrated to produce reasonable low/medium/high classifications at typical typing speeds.
+
+- **Model:** Logistic Regression (C=0.5, scikit-learn)
+- **Scaler:** StandardScaler — z-score normalization per feature
+- **CV:** 5-fold stratified — ROC-AUC 0.535, Accuracy 0.744
+- **Thresholds:** Low < 0.73 ≤ Medium < 0.80 ≤ High
+
+### Trained Coefficients (by importance)
+
+| Feature | Coefficient | Interpretation |
+|---------|------------|----------------|
+| `mean_hold` | +0.621 | Longer key dwell → higher risk (motor rigidity) |
+| `mean_iki` | −0.377 | Faster typing → lower risk |
+| `backspace_rate` | +0.193 | More errors → higher risk |
+| `wpm` | −0.165 | Higher WPM → lower risk |
+| `mean_flight` | +0.116 | Slower transitions → higher risk |
+| `std_iki` | +0.011 | Timing irregularity |
+| `pause_freq` | +0.000 | No signal in this dataset |
 
 ---
 
@@ -155,7 +167,7 @@ The home page (`views/home.ejs` + `public/css/landing.css`) uses:
 - **Inter** — body copy
 - **Space Mono** — monospace data/labels
 
-The brain section is a 550vh sticky scroll where GSAP tweens CSS `scale` + `translate` on the brain scene element, zooming into four anatomical regions (Frontal → Parietal → Temporal → Cerebellum) with colored glow overlays and info panels that correspond to what Cadence measures in each region.
+The brain section is a 550vh sticky scroll with a video frame scrubber — 192 JPEG frames preloaded and painted cover-fill on a canvas. ScrollTrigger maps scroll progress to frame index (Apple-style scrubbing). Four anatomical panels (Frontal → Parietal → Temporal → Cerebellum) switch with hysteresis-gated thresholds to prevent flicker.
 
 ---
 
@@ -189,10 +201,10 @@ zip -r cadence_submission.zip FinalExamProject/ --exclude "*/node_modules/*" --e
 
 ---
 
-## What's Remaining Before Final Submission
+## Submission Checklist
 
-- [ ] Record and upload YouTube demo video — add link above
-- [x] Deploy to Render — add deployed URL above
-- [x] (Optional) Train real model on TAPPY dataset and update `model.json`
-- [x] Add partner name/directory ID if applicable
-- [x] Submit ZIP to class submit server when it opens
+- [x] YouTube demo recorded — https://youtu.be/LjwDRXXC9RM
+- [x] Deployed to Render — https://cadence-cmsc335.onrender.com
+- [x] Real model trained on TAPPY dataset
+- [x] Group members listed
+- [x] ZIP submitted to class submit server
